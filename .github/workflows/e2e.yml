@@ -141,10 +141,10 @@ jobs:
           # Manual-dispatch / workflow_call spec glob, passed via env to avoid
           # interpolating user input directly into the shell script.
           SPEC_PATTERN_INPUT: ${{ inputs.spec_pattern }}
-          # `inputs` only exists for workflow_dispatch and workflow_call (where
-          # github.event_name is the caller's event). toJSON tells an empty
-          # pattern ("") apart from no inputs (null); a bare `!= null` can't.
-          MANUAL_RUN: ${{ toJSON(inputs.spec_pattern) != 'null' }}
+          # A called workflow sees the caller's github.event_name, so detect
+          # workflow_call by its inputs: spec_pattern is "" there, not null.
+          # workflow_dispatch omits empty inputs, hence the event_name check.
+          MANUAL_RUN: ${{ github.event_name == 'workflow_dispatch' || toJSON(inputs.spec_pattern) != 'null' }}
           TARGET_HASH: ${{ env.targetHash }}
           # PRs use base.ref (`master` / `develop`); merge_group uses `refs/heads/...`.
           BASE_REF: ${{ github.event.pull_request.base.ref || github.event.merge_group.base_ref || '' }}
